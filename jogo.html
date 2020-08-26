@@ -53,6 +53,32 @@
         ctx.fillStyle = this.cor;
         ctx.fillRect(this.x, this.y, this.largura, this.altura);
       }
+    },
+
+    obstaculos = {
+      _obs: [],
+      cores: ["#FF5733", "#9EBE42", "#78BE42", "#51BE42", "#6D42BE", "#BE4262"],
+
+      insere: function() {
+        this._obs.push({
+          x: 200,
+          largura: 30 + Math.floor(20 * Math.random()),
+          altura: 30 + Math.floor(100 * Math.random()),
+          cor: this.cores[Math.floor(6 * Math.random())]
+        })
+      },
+
+      atualiza: function() {
+
+      },
+
+      desenha: function() {
+        for (let i = 0; i < this._obs.length; i++) {
+          const obs = this._obs[i];
+          ctx.fillStyle = obs.cor;
+          ctx.fillRect(obs.x, chao.y - obs.altura, obs.largura, obs.altura);
+        }
+      },
     }
     ;
 
@@ -98,6 +124,7 @@
       ctx.fillRect(0, 0, LARGURA, ALTURA);
 
       chao.desenha();
+      obstaculos.desenha();
       bloco.desenha();
     }
     //inicializa o jogo
