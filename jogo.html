@@ -12,6 +12,14 @@
     var canvas, ctx, ALTURA, LARGURA, frames = 0,
     maxPulos = 3,
     velocidade = 6,
+    estadoAtual,
+
+    estados = {
+      jogar: 0,
+      jogando: 1,
+      perdeu: 2
+    },
+
     chao = {
       y: 550,
       altura: 50,
@@ -33,15 +41,23 @@
       velocidade: 0,
       forcaDoPulo: 23.6,
       qntPulos: 3,
+      score: 0,
 
       atualiza: function() {
         this.velocidade += this.gravidade;
         this.y += this.velocidade;
 
-        if(this.y > chao.y - this.altura){
+        if(this.y > chao.y - this.altura && estadoAtual != estados.perdeu){
           this.y = chao.y - this.altura;
           this.qntPulos = 0;
+          this.velocidade = 0;
         }
+      },
+
+      reset: function() {
+        this.velocidade = 0;
+        this.y = 0;
+        this.score = 0;
       },
 
       pula: function() {
@@ -65,7 +81,8 @@
       insere: function() {
         this._obs.push({
           x: LARGURA,
-          largura: 30 + Math.floor(20 * Math.random()),
+          // largura: 30 + Math.floor(20 * Math.random()),
+          largura: 50,
           altura: 30 + Math.floor(100 * Math.random()),
           cor: this.cores[Math.floor(6 * Math.random())]
         });
@@ -79,11 +96,27 @@
         for (let i = 0; i < this._obs.length; i++) {
           const obs = this._obs[i];
 
-          if(obs.x <= -obs.largura){
+          if (
+            bloco.x < obs.x + obs.largura &&
+            bloco.x + bloco.largura >= obs.x &&
+            bloco.y + bloco.altura >= chao.y - obs.altura
+          ){
+            estadoAtual = estados.perdeu;
+          }
+
+          else if(obs.x === 0){
+            bloco.score++;
+          }
+
+          else if(obs.x <= -obs.largura){
             this._obs.splice(i, 1);
           }
           obs.x -= velocidade;
         }
+      },
+
+      limpa: function() {
+        this._obs = [];
       },
 
       desenha: function() {
@@ -97,7 +130,19 @@
     ;
 
     function clique(event) {
-      bloco.pula();
+      if(estadoAtual === estados.jogando){
+        bloco.pula();
+      }
+
+      else if(estadoAtual === estados.jogar){
+        estadoAtual = estados.jogando;
+      }
+
+      else if(estadoAtual === estados.perdeu){
+        estadoAtual = estados.jogar;
+        bloco.reset()
+        obstaculos.limpa();
+      }
     }
 
     function main() {
@@ -118,6 +163,8 @@
       document.body.appendChild(canvas);
       document.addEventListener("mousedown", clique);
 
+      estadoAtual = estados.jogar;
+
       roda();
     }
 
@@ -132,16 +179,51 @@
       frames++;
 
       bloco.atualiza();
-      obstaculos.atualiza();
+      
+      if(estadoAtual === estados.jogando){
+        obstaculos.atualiza();
+      }
+
     }
 
     function desenha() {
       ctx.fillStyle = "#80daff";
       ctx.fillRect(0, 0, LARGURA, ALTURA);
 
-      chao.desenha();
-      obstaculos.desenha();
-      bloco.desenha();
+      ctx.fillStyle = "#fff";
+      ctx.font = "50px Arial";
+      ctx.fillText(bloco.score, 30, 68);
+
+      if(estadoAtual === estados.jogar) {
+        ctx.fillStyle = "green";
+        ctx.fillRect(LARGURA / 2 - 50, ALTURA / 2 - 50, 100, 100)
+      }
+
+      else if ( estadoAtual === estados.perdeu) {
+        ctx.fillStyle = "red";
+        ctx.fillRect(LARGURA / 2 - 50, ALTURA / 2 - 50, 100, 100)
+
+        ctx.save();
+        ctx.translate(LARGURA / 2, ALTURA / 2);
+        ctx.fillStyle = "#fff";
+
+        if(bloco.score < 10){
+          ctx.fillText(bloco.score, -13, 19);
+        } else if (bloco.score >= 10 && bloco.score < 100){
+          ctx.fillText(bloco.score, -26, 19)
+        } else {
+          ctx.fillText(bloco.score, -39, 19)
+        }
+        ctx.restore();
+
+      }
+
+      else if (estadoAtual === estados.jogando) {
+        obstaculos.desenha();
+      }
+        chao.desenha();
+        bloco.desenha();
+
     }
     //inicializa o jogo
     main();
