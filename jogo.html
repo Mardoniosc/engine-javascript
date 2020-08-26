@@ -16,6 +16,9 @@
     PontosParaNovaFase = [5, 10, 15, 20],
     faseAtual = 0,
 
+    labelNovaFase = {
+
+    },
     estados = {
       jogar: 0,
       jogando: 1,
@@ -29,7 +32,7 @@
 
       atualiza: function() {
         this.x -= velocidade;
-        this.x <= -30 ? this.x = 0 : '';
+        this.x <= -30 ? this.x += 30 : '';
       },
 
       desenha: function() {
