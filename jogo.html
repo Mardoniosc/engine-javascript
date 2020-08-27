@@ -17,7 +17,26 @@
     faseAtual = 0,
 
     labelNovaFase = {
-
+      texto: "",
+      opacidade: 0.0,
+      fadeIn: function(dt) {
+        var fadeInId = setInterval(function () {
+          if(labelNovaFase.opacidade < 1.0){
+            labelNovaFase.opacidade += 0.01;
+          }else {
+            clearInterval(fadeInId);
+          }
+        }, 10 * dt)
+      },
+      fadeOut: function(dt) {
+        var fadeOutId = setInterval(function () {
+          if(labelNovaFase.opacidade > 0.0){
+            labelNovaFase.opacidade -= 0.01;
+          }else {
+            clearInterval(fadeOutId);
+          }
+        }, 10 * dt)
+      },
     },
     estados = {
       jogar: 0,
@@ -81,6 +100,7 @@
         this.score = 0;
         velocidade = 6;
         faseAtual = 0;
+        bloco.gravidade = 1.6;
       },
 
       pula: function() {
@@ -104,16 +124,17 @@
     obstaculos = {
       _obs: [],
       _scored: false,
-      cores: ["#FF5733", "#9EBE42", "#78BE42", "#51BE42", "#6D42BE", "#BE4262"],
+      _sprites: [redObstacle, pinkObstacle, blueObstacle, greenObstacle, yellowObstacle],
       tempoInsere: 0,
 
       insere: function() {
         this._obs.push({
           x: LARGURA,
+          y: chao.y - Math.floor(30 + 90 * Math.random()),
           // largura: 30 + Math.floor(20 * Math.random()),
           largura: 50,
-          altura: 30 + Math.floor(100 * Math.random()),
-          cor: this.cores[Math.floor(6 * Math.random())]
+          // altura: 30 + Math.floor(100 * Math.random()),
+          sprite: this._sprites[Math.floor(this._sprites.length * Math.random())]
         });
 
         this.tempoInsere = 30 + Math.floor(25 * Math.random());
@@ -129,7 +150,7 @@
             !bloco.colidindo &&
             bloco.x < obs.x + obs.largura &&
             bloco.x + bloco.largura >= obs.x &&
-            bloco.y + bloco.altura >= chao.y - obs.altura
+            bloco.y + bloco.altura >= obs.y
           ){
             bloco.colidindo = true;
 
@@ -164,8 +185,7 @@
       desenha: function() {
         for (let i = 0; i < this._obs.length; i++) {
           const obs = this._obs[i];
-          ctx.fillStyle = obs.cor;
-          ctx.fillRect(obs.x, chao.y - obs.altura, obs.largura, obs.altura);
+          obs.sprite.desenha(obs.x, obs.y);
         }
       },
     }
@@ -191,6 +211,15 @@
       velocidade++;
       faseAtual++;
       bloco.vidas++;
+
+      if(faseAtual === 4){
+        bloco.gravidade *= 0.6;
+      }
+
+      labelNovaFase.texto = "Level " + faseAtual;
+      labelNovaFase.fadeIn(0.4);
+      setTimeout(function(){ labelNovaFase.fadeOut(0.4); }, 1000);
+      
     }
 
     function main() {
@@ -249,6 +278,9 @@
       ctx.fillText(bloco.score, 30, 68);
       ctx.fillText(bloco.vidas, 540, 68);
 
+      ctx.fillStyle = "rgba(0, 0, 0, " + labelNovaFase.opacidade +")";
+      ctx.fillText(labelNovaFase.texto, canvas.width / 2 - ctx.measureText(labelNovaFase.texto).width / 2, canvas.height / 3);
+
       if (estadoAtual === estados.jogando) {
         obstaculos.desenha();
       }
@@ -269,18 +301,15 @@
           )
 
         ctx.fillStyle = "#fff";
-        ctx.fillText(bloco.score, 375, 390);
 
         if(bloco.score > record){
           novo.desenha(LARGURA/2 - 180, ALTURA / 2 + 30)
           ctx.fillText(bloco.score, 420, 470);
         } else {
+          ctx.fillText(bloco.score, 375, 390);
           ctx.fillText(record, 420, 470);
         }
-
       }
-
-
     }
     //inicializa o jogo
     main();
